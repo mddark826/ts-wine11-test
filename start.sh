@@ -5,6 +5,10 @@ wine --version
 Xvfb :99 -screen 0 1024x768x24 &
 sleep 2
 wine wineboot --init
+if [ ! -d /home/app/.wine/drive_c/windows/mono ]; then
+  echo "=== installing wine-mono via msiexec ==="
+  wine msiexec /i /usr/share/wine/mono/wine-mono-11.0.0-x86.msi /quiet || true
+fi
 wine reg add 'HKCU\Software\Wine\Explorer' /v Desktop /d '1024x768' /f
 wine reg add 'HKCU\Software\Wine\Explorer\Desktops' /v Default /d '1024x768' /f
 x11vnc -display :99 -forever -shared -rfbport 5900 -nopw &
@@ -14,4 +18,5 @@ APP=$(find /home/app/ipts -name ipts.exe | head -1)
 echo "=== launching $APP ==="
 cd "$(dirname "$APP")"
 wine "$APP" --no-sandbox --disable-setuid-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --mute-audio &
+( sleep 30; echo "=== ps at 30s ==="; ps aux | grep -iE 'ipts|wineserver' | grep -v grep; sleep 60; echo "=== ps at 90s ==="; ps aux | grep -iE 'ipts|wineserver' | grep -v grep; sleep 120; echo "=== ps at 210s ==="; ps aux | grep -iE 'ipts|wineserver' | grep -v grep ) &
 sleep infinity
