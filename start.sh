@@ -2,9 +2,11 @@
 export WINEARCH=wow64 WINEPREFIX=/home/app/.wine DISPLAY=:99 LIBGL_ALWAYS_SOFTWARE=1 LANG=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
 echo "=== wine version ==="
 wine --version
+mkdir -p /home/app/.cache/wine
+cp /usr/share/wine/mono/wine-mono-11.0.0-x86.msi /home/app/.cache/wine/ 2>/dev/null || true
 Xvfb :99 -screen 0 1024x768x24 &
 sleep 2
-wine wineboot --init
+WINEDEBUG=+mscoree wine wineboot --init
 if [ ! -d /home/app/.wine/drive_c/windows/mono ]; then
   echo "=== installing wine-mono via msiexec ==="
   wine msiexec /i /usr/share/wine/mono/wine-mono-11.0.0-x86.msi /quiet || true
@@ -17,6 +19,6 @@ websockify --web /usr/share/novnc ${PORT:-10000} 127.0.0.1:5900 &
 APP=$(find /home/app/ipts -name ipts.exe | head -1)
 echo "=== launching $APP ==="
 cd "$(dirname "$APP")"
-wine "$APP" --no-sandbox --disable-setuid-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --mute-audio &
-( sleep 30; echo "=== ps at 30s ==="; ps aux | grep -iE 'ipts|wineserver' | grep -v grep; sleep 60; echo "=== ps at 90s ==="; ps aux | grep -iE 'ipts|wineserver' | grep -v grep; sleep 120; echo "=== ps at 210s ==="; ps aux | grep -iE 'ipts|wineserver' | grep -v grep ) &
+WINEDEBUG=+mscoree wine "$APP" --no-sandbox --disable-setuid-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --mute-audio &
+( sleep 45; echo "=== ps full at 45s ==="; ps aux; if ! ps aux | grep -i '[i]pts.exe' > /dev/null; then echo "=== relaunching app (attempt 2) ==="; cd "$(dirname "$APP")"; WINEDEBUG=+mscoree wine "$APP" --no-sandbox --disable-setuid-sandbox --disable-gpu --disable-dev-shm-usage --disable-extensions --mute-audio & fi; sleep 75; echo "=== ps full at 120s ==="; ps aux ) &
 sleep infinity
