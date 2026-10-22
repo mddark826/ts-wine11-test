@@ -3,13 +3,18 @@ export WINEARCH=wow64 WINEPREFIX=/home/app/.wine DISPLAY=:99 LIBGL_ALWAYS_SOFTWA
 echo "=== wine version ==="
 wine --version
 mkdir -p /home/app/.cache/wine
-cp /usr/share/wine/mono/wine-mono-11.0.0-x86.msi /home/app/.cache/wine/ 2>/dev/null || true
+cp /usr/share/wine/mono/wine-mono-10.4.1-x86.msi /home/app/.cache/wine/ 2>/dev/null || true
 Xvfb :99 -screen 0 1024x768x24 &
 sleep 2
 WINEDEBUG=+mscoree wine wineboot --init
+for i in $(seq 1 72); do
+  if [ -d /home/app/.wine/drive_c/windows/mono ] && ! pgrep -f wineboot.exe > /dev/null; then echo "=== prefix ready after ${i} checks ==="; break; fi
+  sleep 5
+done
 if [ ! -d /home/app/.wine/drive_c/windows/mono ]; then
   echo "=== installing wine-mono via msiexec ==="
-  wine msiexec /i /usr/share/wine/mono/wine-mono-11.0.0-x86.msi /quiet || true
+  wine msiexec /i /usr/share/wine/mono/wine-mono-10.4.1-x86.msi /quiet || true
+  sleep 5
 fi
 wine reg add 'HKCU\Software\Wine\Explorer' /v Desktop /d '1024x768' /f
 wine reg add 'HKCU\Software\Wine\Explorer\Desktops' /v Default /d '1024x768' /f
